@@ -3,11 +3,11 @@
 use Illuminate\Support\Facades\Broadcast;
 use App\Models\Conversation;
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
+    return $user->conversations->contains($conversationId);
 });
 
-// Kode otorisasi agar hanya anggota room chat yang bisa membaca pesan
-Broadcast::channel('chat.{conversationId}', function ($user, $conversationId) {
-    return Conversation::find($conversationId)->users->contains($user->id);
+// Presence channel untuk melacak siapa yang online
+Broadcast::channel('online', function ($user) {
+    return ['id' => $user->id, 'name' => $user->name];
 });

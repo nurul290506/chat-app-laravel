@@ -2,39 +2,58 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ChatController extends Controller
 {
     public function index()
     {
-        $conversations = Auth::user()->conversations()->with('messages')->get();
-        return view('chat.index', compact('conversations'));
+        // Ambil room chat yang diikuti user login
+        $conversations = Auth::user()->conversations()->with(['messages', 'users'])->get();
+        return view('chat', compact('conversations'));
+    }
+
+    public function getUsers()
+    {
+        // Ambil daftar user lain untuk diajak chat baru
+        return response()->json(User::where('id', '!=', auth()->id())->get());
+    }
+
+    public function createConversation($userId)
+    {
+        // Cek apakah chat privat sudah ada
+        $conversation = Conversation::where('is_group', false)
+            ->whereHas('users', function($q) { $q->where('user_id', auth()->id()); })
+            ->whereHas('users', function($q) use ($userId) { $q->where('user_id', $userId); })
+            ->first();
+
+        if (!$conversation) {
+            $conversation = Conversation::create(['is_group' => false]);
+            $conversation->users()->attach([auth()->id(), $userId]);
+        }
+
+        return redirect()->route('chat.index');
     }
 
     public function show(Conversation $conversation)
     {
-        if (!$conversation->users->contains(auth()->id())) {
-            abort(404, 'Kamu tidak memiliki akses ke obrolan ini.');
-        }
-        $messages = $conversation->messages()->with('user')->get();
-        return response()->json($messages);
+        return response()->json($conversation->messages()->with('user')->get());
     }
 
     public function storeMessage(Request $request, Conversation $conversation)
     {
-        $request->validate([
-            'body' => 'required|string',
+        $message = $conversation->messages()->create([
+            'body' => $request->body,
+            'user_id' => auth()->id(),
         ]);
 
-        $message = $conversation->messages()->create([
-            'user_id' => auth()->id(),
-            'body' => $request->body,
-        ]);
         $message->load('user');
+        broadcast(new \App\Events\MessageSent($message))->toOthers();
+
         return response()->json($message);
     }
 }
