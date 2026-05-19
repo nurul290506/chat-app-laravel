@@ -12,7 +12,7 @@ Aplikasi ini mengelola 3 entitas utama yang saling berelasi di dalam database:
 
 ---
 
-## Fitur Utama (Sesuai Kriteria Penilaian)
+## Fitur Utama 
 Sistem ini dirancang khusus untuk memenuhi 4 kriteria utama dari bapak dosen:
 1.  **User Authentication:** Mengamankan hak akses masuk aplikasi menggunakan sistem *Session Guard* dari Laravel Breeze.
 2.  **Websocket Integration:** Mengintegrasikan protokol TCP dupleks penuh (*full-duplex*) melalui Laravel Reverb untuk menjamin pengiriman pesan instan berskala milidetik.
