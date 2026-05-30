@@ -56,21 +56,38 @@
         let activeChannelId = null;
 
         // 1. Pelacak Status Online (Presence Channel)
-        window.Echo.join('online')
-            .here(users => { onlineUsers = users.map(u => u.id); updateStatusUI(); })
-            .joining(user => { onlineUsers.push(user.id); updateStatusUI(); })
-            .leaving(user => { onlineUsers = onlineUsers.filter(id => id !== user.id); updateStatusUI(); });
+        document.addEventListener('DOMContentLoaded', () => {
 
-        function updateStatusUI() {
-            document.querySelectorAll('[id^="status-"]').forEach(el => {
-                const id = parseInt(el.id.replace('status-', ''));
-                if (onlineUsers.includes(id)) {
-                    el.className = "w-3 h-3 rounded-full bg-green-500 border border-green-600 shadow-sm";
-                } else {
-                    el.className = "w-3 h-3 rounded-full bg-gray-300 border border-gray-400 shadow-sm";
-                }
-            });
+            const waitForEcho = setInterval(() => {
+
+             if (window.Echo) {
+                clearInterval(waitForEcho);
+                console.log('Echo ditemukan, menghubungkan ke presence channel...');
+                window.Echo.join('online')
+                    .here(users => {
+                        console.log('User online:', users);
+
+                        onlineUsers = users.map(u => u.id);
+                        updateStatusUI();
+                })
+                .joining(user => {
+                    console.log('User masuk:', user);
+                    if (!onlineUsers.includes(user.id)) {
+                        onlineUsers.push(user.id);
+                    }
+                    updateStatusUI();
+                })
+                .leaving(user => {
+                    console.log('User keluar:', user);
+                    onlineUsers = onlineUsers.filter(id => id !== user.id);
+                    updateStatusUI();
+                });
+
         }
+
+    }, 100);
+
+});
 
         // 2. Logika Modal Cari Orang (Sudah Diperbaiki Menggunakan Tombol Submit)
         function openModal() {
