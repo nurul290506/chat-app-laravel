@@ -55,6 +55,24 @@
         let onlineUsers = [];
         let activeChannelId = null;
 
+        function updateStatusUI() {
+            onlineUsers.forEach(id => {
+                const el = document.getElementById(`status-${id}`);
+                if(el) {
+                    el.classList.remove('bg-gray-300');
+                    el.style.backgroundColor = '#22c55e';
+                }
+            });
+            // Tandai user yang offline
+            document.querySelectorAll('[id^="status-"]').forEach(el => {
+                const id = parseInt(el.id.replace('status-', ''));
+                if (!onlineUsers.includes(id)) {
+                    el.style.backgroundColor = '#d1d5db';
+                    el.classList.add('bg-gray-300');
+                }
+            });
+        }
+
         // 1. Pelacak Status Online (Presence Channel)
         document.addEventListener('DOMContentLoaded', () => {
 
